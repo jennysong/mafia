@@ -8,29 +8,20 @@ global.Backbone = require('backbone');
 global.App = require_tree(path.dirname(require.main.filename)+"/App");
 
 var rooms = new App.Collection.Rooms([], {model: App.Model.Room});
+var users = new App.Collection.Users([], {model: App.Model.User});
 
 app.get('/', function(req, res){
   res.sendfile('index.html');
 });
 
-app.get('/game', function(req, res){
-	res.sendfile('game.html');
-});
+//userList = [{userName, avatarId, avatarBg, userStatus}, {}, {}, {}]
 
 io.on('connection', function(socket){
 	socket.emit('connected')
   socket.on('user join', function(oUser){
-  	socket.join(oUser.gameId);
-  	io.to(oUser.gameId).emit('user joined', oUser.name);
-
-  	//var room = rooms.get(oUser.room);
-  	//var room = rooms.getOrInit(oUser.room);
-
-  	//create user
-  	//var user = new App.Model.User({id: oUser.userId});
-  	//room.addUser(user);
-  	//socket.emit('go to waiting room', user.room.users.toJSON());
-
+    console.log("user join");
+  	socket.join(oUser.roomId);
+  	io.to(oUser.roomId).emit('user joined', oUser.userName);
 
   });
 });
