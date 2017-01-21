@@ -1,4 +1,8 @@
 var Room = Backbone.Model.extend({
+  defaults : {
+    id : null
+  },
+
 	initialize: function(attrs, options) {
 		this.users = new App.Collection.Users([], {model: App.Model.User});
 	},
