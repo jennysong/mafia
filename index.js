@@ -51,7 +51,7 @@ io.on('connection', function(socket){
       }, 10000)
     }
 
-  })
+  });
   socket.on('user is not ready', function(){
     var user = allUsers.get(socket.id);
     var room = rooms.getOrInit(user.get('roomId'));
@@ -59,7 +59,19 @@ io.on('connection', function(socket){
     io.to(user.get('roomId')).emit('ready status', room.users.toJSON());
     clearTimeout(countDown);
     console.log("can't start game yet!");
-  })
+  });
+
+  socket.on('new message', function(msg){
+    var user = allUsers.get(socket.id);
+    var userName = user.get('userName');
+    var oMsg = {
+      writer : userName,
+      msg: msg
+    };
+    io.to(user.get('roomId')).emit('update message', oMsg)
+    var room = rooms.getOrInit(user.get('roomId'));
+    console.log(room.users.toJSON());
+  });
 });
 
 http.listen(3000, function(){
