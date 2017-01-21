@@ -1,0 +1,19 @@
+{
+  "name": "mafia-socket",
+  "version": "0.0.1",
+  "description": "mafia socket",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jennysong/mafia.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/jennysong/mafia/issues"
+  },
+  "homepage": "https://github.com/jennysong/mafia#readme"
+}
