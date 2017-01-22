@@ -71,6 +71,7 @@ io.on('connection', function(socket){
   });
   socket.on('user is not ready', function(){
     var user = allUsers.get(socket.id);
+    if(!user) return;
     var room = rooms.getOrInit(user.get('roomId'));
     user.set('userStatus', false);
     io.to(user.get('roomId')).emit('ready status', room.users.toJSON());
@@ -80,6 +81,7 @@ io.on('connection', function(socket){
 
   socket.on('new message', function(msg){
     var user = allUsers.get(socket.id);
+    if(!user) return;
     var userId = user.id;
     var oMsg = {
       userId : userId,
@@ -93,6 +95,7 @@ io.on('connection', function(socket){
   socket.on('general vote', function(vote){
     var user, roomId, room, aliveUsers, chosenUserId, gameData;
     user = allUsers.get(socket.id);
+    if(!user) return;
     user.set('generalVote', vote);
     roomId = user.get('roomId');
     room = rooms.getOrInit(roomId);
@@ -124,6 +127,7 @@ io.on('connection', function(socket){
   socket.on('special vote', function(vote){
     var user, roomId, room, aliveMafias, chosenByMafiaUserId, aliveDoctors, alivePolices, suspect, gameData = {deadUserId : null};
     user = allUsers.get(socket.id);
+    if(!user) return;
     user.set('specialVote', vote);
     roomId = user.get('roomId');
     room = rooms.getOrInit(roomId);
@@ -171,6 +175,7 @@ io.on('connection', function(socket){
 
   socket.on('user logout', function(){
     var user = allUsers.get(socket.id);
+    if(!user) return;
     var room = rooms.get(user.get('roomId'));
     allUsers.remove(user);
     room.users.remove(user);
@@ -240,6 +245,7 @@ var _chosenOne = function(users, typeOfVote){
 
 var _kill = function(userId){
   var chosenUser = allUsers.get(userId);
+  if(!chosenUser) return;
   chosenUser.set('alive', false);
 }
 
