@@ -70,9 +70,9 @@ io.on('connection', function(socket){
 
   socket.on('new message', function(msg){
     var user = allUsers.get(socket.id);
-    var userName = user.get('userName');
+    var userId = user.id;
     var oMsg = {
-      writer : userName,
+      userId : userId,
       msg: msg
     };
     io.to(user.get('roomId')).emit('update message', oMsg);
