@@ -120,7 +120,7 @@ io.on('connection', function(socket){
   })
 
   socket.on('special vote', function(vote){
-    var user, roomId, room, aliveMafias, chosenByMafiaUserId, aliveDoctors, gameData = {deadUserId : null};
+    var user, roomId, room, aliveMafias, chosenByMafiaUserId, aliveDoctors, suspect, gameData = {deadUserId : null};
     clearTimeout(countDown);
     user = allUsers.get(socket.id);
     user.set('specialVote', vote);
@@ -136,6 +136,16 @@ io.on('connection', function(socket){
     aliveDoctors = _filterOutAliveDoctors(room.users);
     aliveDoctors = new Backbone.Collection(aliveDoctors);
     chosenByDoctorUserId = _chosenOne(aliveDoctors, 'specialVote');
+
+    alivePolices = _filterOutAlivePolices(room.users);
+    if (alivePolices.length > 0){
+      suspect = users.get(alivePolices[0].get('specialVote'));
+      if (suspect.get('role') == 'mafia'){
+        gameData.policeMessage = suspect.get('userName') + 'is a mafia';
+      } else {
+        gameData.policeMessage = suspect.get('userName') + 'is not a mafia';
+      }
+    }
     
     if (_didEveryoneSpecialVote(room.users) && chosenByMafiaUserId){  
       io.to(roomId).emit('start special vote countdown');
@@ -145,6 +155,7 @@ io.on('connection', function(socket){
           _kill(chosenByMafiaUserId);
           gameData.deadUserId = chosenByMafiaUserId;
         }
+
         _resetAllVote(room.users);
         _updateScene(room);
         gameData.users = room.users.toJSON();
