@@ -262,7 +262,7 @@ var _updateScene = function(room){
   var aliveInnocents = aliveUsers - aliveMafias;
   if (aliveMafias == 0){
     room.set('scene', GAMEOVER_SCENE_VILLAGER_WIN);
-  } else if (aliveMafias > aliveInnocents){
+  } else if (aliveMafias > aliveInnocents || (aliveMafias==1 && aliveInnocents==1)){
     room.set('scene', GAMEOVER_SCENE_MAFIA_WIN);
   } else {
     room.set('scene', room.get('scene')+1);
