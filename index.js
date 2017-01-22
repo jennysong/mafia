@@ -286,7 +286,4 @@ var _filterOutAliveUsers = function(users){
   });
 }
 
-var _deleteRoom = function()
-
-
 
