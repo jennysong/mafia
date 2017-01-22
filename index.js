@@ -120,7 +120,7 @@ io.on('connection', function(socket){
   })
 
   socket.on('special vote', function(vote){
-    var user, roomId, room, aliveMafias, chosenByMafiaUserId, aliveDoctors, suspect, gameData = {deadUserId : null};
+    var user, roomId, room, aliveMafias, chosenByMafiaUserId, aliveDoctors, alivePolices, suspect, gameData = {deadUserId : null};
     clearTimeout(countDown);
     user = allUsers.get(socket.id);
     user.set('specialVote', vote);
