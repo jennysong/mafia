@@ -12,6 +12,7 @@ var allUsers = new App.Collection.Users([], {model: App.Model.User});
 var YOUR_FAVORITE_TIME = 10000;
 var GAMEOVER_SCENE_MAFIA_WIN = 666;
 var GAMEOVER_SCENE_VILLAGER_WIN = 999;
+var SERVER_PORT = parseInt(process.env.PORT || 3000)
 
 app.get('/', function(req, res){
   res.sendfile('index.html');
@@ -180,8 +181,8 @@ io.on('connection', function(socket){
 
 });
 
-http.listen(3000, function(){
-  console.log('listening on *:3000');
+http.listen(SERVER_PORT, function(){
+  console.log('listening on *:'+SERVER_PORT.toString());
 });
 
 var _isGameReady = function(users){
