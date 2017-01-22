@@ -222,8 +222,8 @@ var _resetAllVote = function(users){
 }
 
 var _updateScene = function(room){
-  var aliveUsers = _filterOutAliveUsers(room.users);
-  var aliveMafias = _filterOutAliveMafias(room.users);
+  var aliveUsers = _filterOutAliveUsers(room.users).length;
+  var aliveMafias = _filterOutAliveMafias(room.users).length;
   var aliveInnocents = aliveUsers - aliveMafias;
   if (aliveMafias == 0){
     room.set('scene', GAMEOVER_SCENE_VILLAGER_WIN); 
