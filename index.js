@@ -9,6 +9,7 @@ global.App = require_tree(path.dirname(require.main.filename)+"/App");
 
 var rooms = new App.Collection.Rooms([], {model: App.Model.Room});
 var allUsers = new App.Collection.Users([], {model: App.Model.User});
+var YOUR_FAVORITE_TIME = 3000;
 
 app.get('/', function(req, res){
   res.sendfile('index.html');
@@ -50,7 +51,7 @@ io.on('connection', function(socket){
           scene: 1
         };
         io.to(user.get('roomId')).emit('game start', gameData);
-      }, 10000)
+      }, 3000)
     }
 
   });
@@ -87,7 +88,7 @@ io.on('connection', function(socket){
       countDown = setTimeout(function(){
         _kill(chosenUserId);
         io.to(roomId).emit('someone is dead', room.users.toJSON());
-      }, 10000);
+      }, YOUR_FAVORITE_TIME);
     }
   })
 
@@ -104,12 +105,12 @@ io.on('connection', function(socket){
 
 });
 
-http.listen(3000, function(){
+http.listen(YOUR_FAVORITE_TIME, function(){
   console.log('listening on *:3000');
 });
 
 var _isGameReady = function(users){
-  return users.every(function(user){  //>3 users.size > 0 && 
+  return users.every(function(user){  //>3 users.size > 0 &&
     return user.get('userStatus');
   });
 }
