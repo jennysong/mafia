@@ -95,14 +95,14 @@ io.on('connection', function(socket){
     user.set('generalVote', vote);
     roomId = user.get('roomId');
     room = rooms.getOrInit(roomId);
-    io.to(roomId).emit('general vote update', room.users.toJSON()); 
+    io.to(roomId).emit('general vote update', room.users.toJSON());
     console.log('general vote update');
-    
+
     aliveUsers = _filterOutAliveUsers(room.users);
     aliveUsers = new Backbone.Collection(aliveUsers);
     chosenUserId = _chosenOne(aliveUsers, 'generalVote');
 
-    if (_didEveryoneGeneralVote(aliveUsers) && chosenUserId){  
+    if (_didEveryoneGeneralVote(aliveUsers) && chosenUserId){
       io.to(roomId).emit('start general vote countdown');
       console.log('start general vote countdown');
       countDown = setTimeout(function(){
@@ -126,7 +126,7 @@ io.on('connection', function(socket){
     user.set('specialVote', vote);
     roomId = user.get('roomId');
     room = rooms.getOrInit(roomId);
-    io.to(roomId).emit('special vote update', room.users.toJSON()); 
+    io.to(roomId).emit('special vote update', room.users.toJSON());
     console.log('special vote update');
 
     aliveMafias = _filterOutAliveMafias(room.users);
@@ -139,15 +139,15 @@ io.on('connection', function(socket){
 
     alivePolices = _filterOutAlivePolices(room.users);
     if (alivePolices.length > 0){
-      suspect = users.get(alivePolices[0].get('specialVote'));
+      suspect = room.users.get(alivePolices[0].get('specialVote'));
       if (suspect.get('role') == 'mafia'){
-        gameData.policeMessage = suspect.get('userName') + 'is a mafia';
+        gameData.policeMessage = suspect.get('userName') + ' is a mafia';
       } else {
-        gameData.policeMessage = suspect.get('userName') + 'is not a mafia';
+        gameData.policeMessage = suspect.get('userName') + ' is not a mafia';
       }
     }
-    
-    if (_didEveryoneSpecialVote(room.users) && chosenByMafiaUserId){  
+
+    if (_didEveryoneSpecialVote(room.users) && chosenByMafiaUserId){
       io.to(roomId).emit('start special vote countdown');
       console.log('start special vote countdown');
       countDown = setTimeout(function(){
@@ -253,9 +253,9 @@ var _updateScene = function(room){
   var aliveMafias = _filterOutAliveMafias(room.users).length;
   var aliveInnocents = aliveUsers - aliveMafias;
   if (aliveMafias == 0){
-    room.set('scene', GAMEOVER_SCENE_VILLAGER_WIN); 
+    room.set('scene', GAMEOVER_SCENE_VILLAGER_WIN);
   } else if (aliveMafias >= aliveInnocents){
-    room.set('scene', GAMEOVER_SCENE_MAFIA_WIN); 
+    room.set('scene', GAMEOVER_SCENE_MAFIA_WIN);
   } else {
     room.set('scene', room.get('scene')+1);
   }
