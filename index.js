@@ -9,7 +9,7 @@ global.App = require_tree(path.dirname(require.main.filename)+"/App");
 
 var rooms = new App.Collection.Rooms([], {model: App.Model.Room});
 var allUsers = new App.Collection.Users([], {model: App.Model.User});
-var YOUR_FAVORITE_TIME = 3000;
+var YOUR_FAVORITE_TIME = 10000;
 var GAMEOVER_SCENE_MAFIA_WIN = 666;
 var GAMEOVER_SCENE_VILLAGER_WIN = 999;
 
@@ -39,8 +39,9 @@ io.on('connection', function(socket){
 
         io.to(oUser.roomId).emit('user joined', room.users.toJSON());
         console.log('user joined');
+    } else {
+      socket.emit('game already started');
     }
-    socket.emit('game already started');
   });
 
   var countDown;
@@ -152,6 +153,17 @@ io.on('connection', function(socket){
         io.to(roomId).emit('vote result', gameData);
         console.log('vote result. Next scene: ' + room.get('scene'));
       }, YOUR_FAVORITE_TIME);
+    }
+  })
+
+  socket.on('user logout', function(){
+    var user = allUsers.get(socket.id);
+    var room = rooms.get(user.get('roomId'));
+    allUsers.remove(user);
+    room.users.remove(user);
+    socket.leave(roomId);
+    if (room.users.length == 0){
+      rooms.remove(room);
     }
   })
 
@@ -273,6 +285,8 @@ var _filterOutAliveUsers = function(users){
     return user.get('alive') == true;
   });
 }
+
+var _deleteRoom = function()
 
 
 
