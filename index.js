@@ -99,7 +99,7 @@ io.on('connection', function(socket){
       console.log('start general vote countdown');
       countDown = setTimeout(function(){
         _kill(chosenUserId);
-        io.to(roomId).emit('someone is dead', room.users.toJSON());
+        io.to(roomId).emit('someone is dead', chosenUserId);
         console.log('someone is dead');
         //did game end?
       }, YOUR_FAVORITE_TIME);
