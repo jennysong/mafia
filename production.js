@@ -1,0 +1,1 @@
+require("supervisor").run(['-w', __dirname, '-e', 'js', 'node', __dirname + "/index.js"])
