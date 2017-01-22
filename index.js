@@ -51,7 +51,7 @@ io.on('connection', function(socket){
           scene: 1
         };
         io.to(user.get('roomId')).emit('game start', gameData);
-      }, 3000)
+      }, YOUR_FAVORITE_TIME)
     }
 
   });
@@ -105,7 +105,7 @@ io.on('connection', function(socket){
 
 });
 
-http.listen(YOUR_FAVORITE_TIME, function(){
+http.listen(3000, function(){
   console.log('listening on *:3000');
 });
 
