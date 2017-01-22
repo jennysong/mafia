@@ -48,6 +48,7 @@ io.on('connection', function(socket){
   var countDown;
   socket.on('user is ready', function(){
     var user = allUsers.get(socket.id);
+    return if(!user)
     var room = rooms.getOrInit(user.get('roomId'));
     user.set('userStatus', true);
     io.to(user.get('roomId')).emit('ready status', room.users.toJSON());
