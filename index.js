@@ -43,10 +43,11 @@ io.on('connection', function(socket){
     user.set('userStatus', true);
     io.to(user.get('roomId')).emit('ready status', room.users.toJSON());
 
-    if (_everyoneReady(room.users)){
+    if (_isGameReady(room.users)){
       console.log("countdown start!");
       countDown = setTimeout(function(){
-        io.to(user.get('roomId')).emit('game start');
+        _setRoles(room.users);
+        io.to(user.get('roomId')).emit('game start', room.users.toJSON());
         console.log("game start!");
       }, 10000)
     }
@@ -78,9 +79,35 @@ http.listen(3000, function(){
   console.log('listening on *:3000');
 });
 
-var _everyoneReady = function(users){
-  return users.every(function(user){
+var _isGameReady = function(users){
+  return users.every(function(user){  //>3 users.size > 0 && 
     return user.get('userStatus');
   });
+}
 
+var _setRoles = function(users){
+  var numOfMafia, numOfDoctor = 0, numOfPolice = 0, numOfVillager;
+  var userCount = users.size();
+  var arr = _.range(0,userCount);
+  var shuffledArr = _.shuffle(arr);
+  numOfMafia = Math.floor(userCount/3);
+  if (userCount > 4) {
+    numOfDoctor = 1;
+  }
+  if (userCount > 6) {
+    numOfPolice = 1;
+  }
+  numOfVillager = userCount - numOfMafia - numOfDoctor - numOfPolice;
+  for (var i = 0; i<numOfMafia; i++){
+    users.at(arr[i]).set('role', 'mafia');
+  }
+  for (var i = numOfMafia; i<numOfMafia+numOfDoctor; i++){
+    users.at(arr[i]).set('role', 'doctor');
+  }
+  for (var i = numOfMafia+numOfDoctor; i<numOfMafia+numOfDoctor+numOfPolice; i++){
+    users.at(arr[i]).set('role', 'police');
+  }
+  for (var i = numOfMafia+numOfDoctor+numOfPolice; i<userCount; i++){
+    users.at(arr[i]).set('role', 'villager');
+  }
 }

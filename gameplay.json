@@ -1,0 +1,60 @@
+{
+  "4" : { 
+    "mafia" : 1, 
+    "villager" : 3
+  },
+
+  "5" : {
+    "mafia" : 1, 
+    "villager" : 3,
+    "doctor" : 1
+  },
+
+  "6" : {
+    "mafia" : 2, 
+    "villager" : 3,
+    "doctor" : 1
+  },
+
+  "7" : {
+    "mafia" : 2,
+    "villager" : 3,
+    "doctor" : 1,
+    "police" : 1
+  },
+
+  "8" : {
+    "mafia" : 2,
+    "villager" : 4,
+    "doctor" : 1,
+    "police" : 1
+  },
+
+  "9" : {
+    "mafia" : 3,
+    "villager" :4,
+    "doctor" : 1,
+    "police" : 1
+  },
+
+  "10" : {
+    "mafia" : 3,
+    "villager" :5,
+    "doctor" : 1,
+    "police" : 1
+  },
+
+  "11" : {
+    "mafia" : 3,
+    "villager" :6,
+    "doctor" : 1,
+    "police" : 1
+  },
+
+  "12" : {
+    "mafia" : 4,
+    "villager" :6,
+    "doctor" : 1,
+    "police" : 1
+  }
+}
