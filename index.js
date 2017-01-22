@@ -33,7 +33,6 @@ io.on('connection', function(socket){
     socket.join(oUser.roomId);
 
   	io.to(oUser.roomId).emit('user joined', room.users.toJSON());
-    console.log(room.users.toJSON());
   });
 
   var countDown;
@@ -44,11 +43,13 @@ io.on('connection', function(socket){
     io.to(user.get('roomId')).emit('ready status', room.users.toJSON());
 
     if (_isGameReady(room.users)){
-      console.log("countdown start!");
       countDown = setTimeout(function(){
         _setRoles(room.users);
-        io.to(user.get('roomId')).emit('game start', room.users.toJSON());
-        console.log("game start!");
+        var gameData = {
+          users: room.users.toJSON(),
+          scene: 1
+        };
+        io.to(user.get('roomId')).emit('game start', gameData);
       }, 10000)
     }
 
@@ -59,7 +60,6 @@ io.on('connection', function(socket){
     user.set('userStatus', false);
     io.to(user.get('roomId')).emit('ready status', room.users.toJSON());
     clearTimeout(countDown);
-    console.log("can't start game yet!");
   });
 
   socket.on('new message', function(msg){
@@ -71,8 +71,37 @@ io.on('connection', function(socket){
     };
     io.to(user.get('roomId')).emit('update message', oMsg)
     var room = rooms.getOrInit(user.get('roomId'));
-    console.log(room.users.toJSON());
   });
+
+  socket.on('general vote', function(vote){
+    clearTimeout(countDown);
+    var user = allUsers.get(socket.id);
+    user.set('generalVote', vote);
+    var roomId = user.get('roomId');
+    var room = rooms.getOrInit(roomId);
+    io.to(roomId).emit('general vote update', room.users.toJSON());
+    
+    var chosenUserId = _chosenOne(room.users);
+    if (_didEveryoneGeneralVote(room.users) && chosenOne){  
+      io.to(roomId).emit('start general vote countdown');
+      countDown = setTimeout(function(){
+        _kill(chosenUserId);
+        io.to(roomId).emit('someone is dead', room.users.toJSON());
+      }, 10000);
+    }
+  })
+
+  socket.on('special vote', function(vote){
+    var user = allUsers.get(socket.id);
+    user.set('specialVote', vote);
+    var room = rooms.getOrInit(user.get('roomId'));
+    if (_isSpecialVoteDone(room.users)){
+
+    }
+  })
+
+
+
 });
 
 http.listen(3000, function(){
@@ -110,4 +139,38 @@ var _setRoles = function(users){
   for (var i = numOfMafia+numOfDoctor+numOfPolice; i<userCount; i++){
     users.at(arr[i]).set('role', 'villager');
   }
+}
+
+var _didEveryoneGeneralVote = function(users){
+  return users.every(function(user){
+    return user.get('generalVote');
+  });
+}
+
+var _chosenOne = function(users){
+  var countedVote = users.countBy('generalVote');
+  var maxCount = _(countedVote).max(function(val, key){
+    return val;
+  })
+  var ans, count = 0;
+  _(countedVote).each(function(val,key){
+    if (val == maxCount){
+      ans = key;
+      count++;
+    }
+  })
+  if(count>1){
+    ans = null;
+  }
+  return ans;
+}
+
+var _kill = function(userId){
+  var chosenUser = allUsers.get(chosenUserId);
+  chosenUser.set('alive', false);
+}
+
+
+var _isSpecialVoteDone = function(users){
+
 }

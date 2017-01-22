@@ -7,7 +7,11 @@ var User = Backbone.Model.extend({
     userStatus : null,
     roomId : null,
     id : null,
-    role: null
+    role: null,
+    alive: true,
+    generalVote: null,
+    specialVote: null
+
   },
 
 	setRoom: function(room) {
