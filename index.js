@@ -132,7 +132,7 @@ io.on('connection', function(socket){
         if (chosenByMafiaUserId != chosenByDoctorUserId){
           _kill(chosenByMafiaUserId);
         }
-        io.to(roomId).emit('someone is dead', room.users.toJSON());
+        io.to(roomId).emit('someone is dead', chosenByMafiaUserId);
         console.log('someone is dead');
         //did game end?
       }, YOUR_FAVORITE_TIME);
