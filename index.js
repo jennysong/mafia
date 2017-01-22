@@ -123,6 +123,7 @@ io.on('connection', function(socket){
     aliveDoctors = _filterOutAliveDoctors(room.users);
     aliveDoctors = new Backbone.Collection(aliveDoctors);
     chosenByDoctorUserId = _chosenOne(aliveDoctors, 'specialVote');
+    
 
     if (_didEveryoneSpecialVote(room.users) && chosenByMafiaUserId){  
       io.to(roomId).emit('start special vote countdown');
@@ -166,16 +167,16 @@ var _setRoles = function(users){
   }
   numOfVillager = userCount - numOfMafia - numOfDoctor - numOfPolice;
   for (var i = 0; i<numOfMafia; i++){
-    users.at(arr[i]).set('role', 'mafia');
+    users.at(shuffledArr[i]).set('role', 'mafia');
   }
   for (var i = numOfMafia; i<numOfMafia+numOfDoctor; i++){
-    users.at(arr[i]).set('role', 'doctor');
+    users.at(shuffledArr[i]).set('role', 'doctor');
   }
   for (var i = numOfMafia+numOfDoctor; i<numOfMafia+numOfDoctor+numOfPolice; i++){
-    users.at(arr[i]).set('role', 'police');
+    users.at(shuffledArr[i]).set('role', 'police');
   }
   for (var i = numOfMafia+numOfDoctor+numOfPolice; i<userCount; i++){
-    users.at(arr[i]).set('role', 'villager');
+    users.at(shuffledArr[i]).set('role', 'villager');
   }
 }
 
@@ -199,13 +200,10 @@ var _chosenOne = function(users, typeOfVote){
 }
 
 var _kill = function(userId){
-  var chosenUser = allUsers.get(chosenUserId);
+  var chosenUser = allUsers.get(userId);
   chosenUser.set('alive', false);
 }
 
-var _killIfNoOneCanHelp = function(userId){
-
-}
 
 var _didEveryoneGeneralVote = function(users){
   return users.every(function(user){
@@ -215,7 +213,7 @@ var _didEveryoneGeneralVote = function(users){
 
 var _didEveryoneSpecialVote = function(users){
   return users.every(function(user){
-    return (user.get('specialVote') || user.get('alive') == false);
+    return (user.get('specialVote') || user.get('alive') == false || user.get('role') == 'villager');
   });
 }
 
