@@ -134,7 +134,7 @@ io.on('connection', function(socket){
         io.to(roomId).emit('someone is dead', room.users.toJSON());
         console.log('someone is dead');
         //did game end?
-      },
+      }, YOUR_FAVORITE_TIME);
     }
   })
 
