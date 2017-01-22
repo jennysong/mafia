@@ -45,7 +45,7 @@ io.on('connection', function(socket){
     }
   });
 
-  var countDown;
+  
   socket.on('user is ready', function(){
     var user = allUsers.get(socket.id);
     if(!user) return;
@@ -55,7 +55,7 @@ io.on('connection', function(socket){
     console.log('ready status');
 
     if (_isGameReady(room.users)){
-      countDown = setTimeout(function(){
+      room.countDown = setTimeout(function(){
         console.log('countdown start');
         room.set('isGameActive', true);
         _setRoles(room.users);
@@ -74,7 +74,7 @@ io.on('connection', function(socket){
     var room = rooms.getOrInit(user.get('roomId'));
     user.set('userStatus', false);
     io.to(user.get('roomId')).emit('ready status', room.users.toJSON());
-    clearTimeout(countDown);
+    clearTimeout(room.countDown);
     console.log('user is not ready');
   });
 
@@ -92,11 +92,11 @@ io.on('connection', function(socket){
 
   socket.on('general vote', function(vote){
     var user, roomId, room, aliveUsers, chosenUserId, gameData;
-    clearTimeout(countDown);
     user = allUsers.get(socket.id);
     user.set('generalVote', vote);
     roomId = user.get('roomId');
     room = rooms.getOrInit(roomId);
+    clearTimeout(room.countDown);
     io.to(roomId).emit('general vote update', room.users.toJSON());
     console.log('general vote update');
 
@@ -107,7 +107,7 @@ io.on('connection', function(socket){
     if (_didEveryoneGeneralVote(aliveUsers) && chosenUserId){
       io.to(roomId).emit('start general vote countdown');
       console.log('start general vote countdown');
-      countDown = setTimeout(function(){
+      room.countDown = setTimeout(function(){
         _kill(chosenUserId);
         _updateScene(room);
         gameData = {
@@ -123,11 +123,11 @@ io.on('connection', function(socket){
 
   socket.on('special vote', function(vote){
     var user, roomId, room, aliveMafias, chosenByMafiaUserId, aliveDoctors, alivePolices, suspect, gameData = {deadUserId : null};
-    clearTimeout(countDown);
     user = allUsers.get(socket.id);
     user.set('specialVote', vote);
     roomId = user.get('roomId');
     room = rooms.getOrInit(roomId);
+    clearTimeout(room.countDown);
     io.to(roomId).emit('special vote update', room.users.toJSON());
     console.log('special vote update');
 
@@ -152,7 +152,7 @@ io.on('connection', function(socket){
     if (_didEveryoneSpecialVote(room.users) && chosenByMafiaUserId){
       io.to(roomId).emit('start special vote countdown');
       console.log('start special vote countdown');
-      countDown = setTimeout(function(){
+      room.countDown = setTimeout(function(){
         if (chosenByMafiaUserId != chosenByDoctorUserId){
           _kill(chosenByMafiaUserId);
           gameData.deadUserId = chosenByMafiaUserId;
