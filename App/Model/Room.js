@@ -1,7 +1,8 @@
 var Room = Backbone.Model.extend({
   defaults : {
     id : null,
-    scene : 1
+    scene : 1,
+    isGameActive: false
   },
 
 	initialize: function(attrs, options) {

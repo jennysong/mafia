@@ -32,12 +32,15 @@ io.on('connection', function(socket){
       id : socket.id
     });
     var room = rooms.getOrInit(oUser.roomId);
-    room.addUser(user);
-    allUsers.add(user);
-    socket.join(oUser.roomId);
+    if (room.get('isGameActive') == false){
+        room.addUser(user);
+        allUsers.add(user);
+        socket.join(oUser.roomId);
 
-  	io.to(oUser.roomId).emit('user joined', room.users.toJSON());
-    console.log('user joined');
+        io.to(oUser.roomId).emit('user joined', room.users.toJSON());
+        console.log('user joined');
+    }
+    socket.emit('game already started');
   });
 
   var countDown;
@@ -51,6 +54,7 @@ io.on('connection', function(socket){
     if (_isGameReady(room.users)){
       countDown = setTimeout(function(){
         console.log('countdown start');
+        room.set('isGameActive', true);
         _setRoles(room.users);
         var gameData = {
           users: room.users.toJSON(),
