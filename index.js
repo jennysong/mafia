@@ -49,7 +49,7 @@ io.on('connection', function(socket){
         _setRoles(room.users);
         io.to(user.get('roomId')).emit('game start', room.users.toJSON());
         console.log("game start!");
-      }, 10000)
+      }, 1000)
     }
 
   });
@@ -80,7 +80,7 @@ http.listen(3000, function(){
 });
 
 var _isGameReady = function(users){
-  return users.every(function(user){  //>3 users.size > 0 && 
+  return users.every(function(user){  //>3 users.size > 0 &&
     return user.get('userStatus');
   });
 }
