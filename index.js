@@ -75,15 +75,21 @@ io.on('connection', function(socket){
   });
 
   socket.on('general vote', function(vote){
+    console.log(vote);
     clearTimeout(countDown);
     var user = allUsers.get(socket.id);
     user.set('generalVote', vote);
     var roomId = user.get('roomId');
     var room = rooms.getOrInit(roomId);
-    io.to(roomId).emit('general vote update', room.users.toJSON());
+    io.to(roomId).emit('general vote update', room.users.toJSON()); 
     
-    var chosenUserId = _chosenOne(room.users);
-    if (_didEveryoneGeneralVote(room.users) && chosenOne){  
+    var aliveUsers = room.users.filter(function(user){
+      return user.get('alive') == true
+    })
+
+    aliveUsers = new Backbone.Collection(aliveUsers);
+    var chosenUserId = _chosenOne(aliveUsers);
+    if (_didEveryoneGeneralVote(aliveUsers) && chosenUserId){  
       io.to(roomId).emit('start general vote countdown');
       countDown = setTimeout(function(){
         _kill(chosenUserId);
