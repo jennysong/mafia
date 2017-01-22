@@ -1,6 +1,7 @@
 var Room = Backbone.Model.extend({
   defaults : {
-    id : null
+    id : null,
+    scene : 1
   },
 
 	initialize: function(attrs, options) {

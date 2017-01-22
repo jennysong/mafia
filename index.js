@@ -10,6 +10,8 @@ global.App = require_tree(path.dirname(require.main.filename)+"/App");
 var rooms = new App.Collection.Rooms([], {model: App.Model.Room});
 var allUsers = new App.Collection.Users([], {model: App.Model.User});
 var YOUR_FAVORITE_TIME = 3000;
+var GAMEOVER_SCENE_MAFIA_WIN = 666;
+var GAMEOVER_SCENE_VILLAGER_WIN = 999;
 
 app.get('/', function(req, res){
   res.sendfile('index.html');
@@ -48,10 +50,11 @@ io.on('connection', function(socket){
 
     if (_isGameReady(room.users)){
       countDown = setTimeout(function(){
+        console.log('countdown start');
         _setRoles(room.users);
         var gameData = {
           users: room.users.toJSON(),
-          scene: 1
+          scene: room.get('scene')
         };
         io.to(user.get('roomId')).emit('game start', gameData);
         console.log('game start');
@@ -64,15 +67,15 @@ io.on('connection', function(socket){
     var room = rooms.getOrInit(user.get('roomId'));
     user.set('userStatus', false);
     io.to(user.get('roomId')).emit('ready status', room.users.toJSON());
-    console.log('ready status');
     clearTimeout(countDown);
+    console.log('user is not ready');
   });
 
   socket.on('new message', function(msg){
     var user = allUsers.get(socket.id);
-    var userName = user.get('userName');
+    var userId = user.id;
     var oMsg = {
-      writer : userName,
+      userId : userId,
       msg: msg
     };
     io.to(user.get('roomId')).emit('update message', oMsg);
@@ -81,7 +84,7 @@ io.on('connection', function(socket){
   });
 
   socket.on('general vote', function(vote){
-    var user, roomId, room, aliveUsers, chosenUserId;
+    var user, roomId, room, aliveUsers, chosenUserId, gameData;
     clearTimeout(countDown);
     user = allUsers.get(socket.id);
     user.set('generalVote', vote);
@@ -99,15 +102,20 @@ io.on('connection', function(socket){
       console.log('start general vote countdown');
       countDown = setTimeout(function(){
         _kill(chosenUserId);
-        io.to(roomId).emit('someone is dead', chosenUserId);
-        console.log('someone is dead');
-        //did game end?
+        _updateScene(room);
+        gameData = {
+          users : room.users.toJSON(),
+          deadUserId : chosenUserId,
+          scene : room.get('scene')
+        }
+        io.to(roomId).emit('vote result', gameData);
+        console.log('vote result. Next scene: ' + room.get('scene'));
       }, YOUR_FAVORITE_TIME);
     }
   })
 
   socket.on('special vote', function(vote){
-    var user, roomId, room, aliveMafias, chosenByMafiaUserId, aliveDoctors;
+    var user, roomId, room, aliveMafias, chosenByMafiaUserId, aliveDoctors, gameData = {deadUserId : null};
     clearTimeout(countDown);
     user = allUsers.get(socket.id);
     user.set('specialVote', vote);
@@ -124,22 +132,24 @@ io.on('connection', function(socket){
     aliveDoctors = new Backbone.Collection(aliveDoctors);
     chosenByDoctorUserId = _chosenOne(aliveDoctors, 'specialVote');
     
-
     if (_didEveryoneSpecialVote(room.users) && chosenByMafiaUserId){  
       io.to(roomId).emit('start special vote countdown');
       console.log('start special vote countdown');
       countDown = setTimeout(function(){
         if (chosenByMafiaUserId != chosenByDoctorUserId){
           _kill(chosenByMafiaUserId);
+          gameData.deadUserId = chosenByMafiaUserId;
         }
-        io.to(roomId).emit('someone is dead', chosenByMafiaUserId);
-        console.log('someone is dead');
-        //did game end?
+        _resetAllVote(room.users);
+        _updateScene(room);
+        gameData.users = room.users.toJSON();
+        gameData.scene = room.get('scene');
+
+        io.to(roomId).emit('vote result', gameData);
+        console.log('vote result. Next scene: ' + room.get('scene'));
       }, YOUR_FAVORITE_TIME);
     }
   })
-
-
 
 });
 
@@ -204,6 +214,25 @@ var _kill = function(userId){
   chosenUser.set('alive', false);
 }
 
+var _resetAllVote = function(users){
+  users.each(function(user){
+    user.set('generalVote', null);
+    user.set('specialVote', null);
+  })
+}
+
+var _updateScene = function(room){
+  var aliveUsers = _filterOutAliveUsers(room.users);
+  var aliveMafias = _filterOutAliveMafias(room.users);
+  var aliveInnocents = aliveUsers - aliveMafias;
+  if (aliveMafias == 0){
+    room.set('scene', GAMEOVER_SCENE_VILLAGER_WIN); 
+  } else if (aliveMafias >= aliveInnocents){
+    room.set('scene', GAMEOVER_SCENE_MAFIA_WIN); 
+  } else {
+    room.set('scene', room.get('scene')+1);
+  }
+}
 
 var _didEveryoneGeneralVote = function(users){
   return users.every(function(user){
