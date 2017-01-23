@@ -9,7 +9,7 @@ global.App = require_tree(path.dirname(require.main.filename)+"/App");
 
 var rooms = new App.Collection.Rooms([], {model: App.Model.Room});
 var allUsers = new App.Collection.Users([], {model: App.Model.User});
-var YOUR_FAVORITE_TIME = 10000;
+var YOUR_FAVORITE_TIME = 5000;
 var GAMEOVER_SCENE_MAFIA_WIN = 666;
 var GAMEOVER_SCENE_VILLAGER_WIN = 999;
 var SERVER_PORT = parseInt(process.env.PORT || 3000)
@@ -45,7 +45,7 @@ io.on('connection', function(socket){
     }
   });
 
-  
+
   socket.on('user is ready', function(){
     var user = allUsers.get(socket.id);
     if(!user) return;
@@ -54,7 +54,7 @@ io.on('connection', function(socket){
     io.to(user.get('roomId')).emit('ready status', room.users.toJSON());
     console.log('ready status');
 
-    if (_isGameReady(room.users)){
+    if (_isGameReady(room.users) && room.users.length > 2){
       room.countDown = setTimeout(function(){
         console.log('countdown start');
         room.set('isGameActive', true);
