@@ -2,6 +2,7 @@ var app = require('express')();
 var http = require('http').Server(app);
 var io = require('socket.io')(http);
 var require_tree = require('require-tree');
+global.uuid = require('uuid');
 global.path = require('path');
 global._ = require('underscore');
 global.Backbone = require('backbone');
@@ -20,34 +21,57 @@ app.get('/', function(req, res){
 
 
 io.on('connection', function(socket){
-	socket.emit('connected');
-  console.log('connected');
+	socket.on('init new user', function() {
+    var newUser = allUsers.initNew();
+    socket.emit('user initialized', newUser.id);
+  })
 
-  socket.on('user join', function(oUser){
-    var user = new App.Model.User({
-      userName : oUser.userName,
-      avatarId : oUser.avatarId,
-      avatarBg : oUser.avatarBg,
-      userStatus : oUser.userStatus,
-      roomId: oUser.roomId,
-      id : socket.id
-    });
-    var room = rooms.getOrInit(oUser.roomId);
-    if (room.get('isGameActive') == false){
-        room.addUser(user);
-        allUsers.add(user);
-        socket.join(oUser.roomId);
+  socket.on('load user', function(sUserId) {
+    socket.sUserId = sUserId
+    _findUser(socket, function(user) {
+      socket.emit('user found', user.toJSON());
+    })
+  })
 
-        io.to(oUser.roomId).emit('user joined', room.users.toJSON());
-        console.log('user joined');
-    } else {
-      socket.emit('game already started');
-    }
+  socket.on('user join', function(oUserAttrs){
+    _findUser(socket, function(user) {
+      oUserAttrs = _(oUserAttrs).pick('userName', 'avatarId', 'avatarBg', 'userStatus', 'roomId');
+      user.set(oUserAttrs);
+
+      var room = rooms.getOrInit(user.get('roomId'));
+      if (room.get('isGameActive') == false){
+          room.addUser(user);
+          socket.join(user.get('roomId'));
+
+          io.to(user.get('roomId')).emit('user joined', room.users.toJSON());
+          console.log('user joined');
+      } else {
+        socket.emit('game already started');
+      }
+    })
   });
+
+  socket.on('resume current game', function(){
+    _findUser(socket, function(user) {
+      var room = rooms.getOrInit(user.get('roomId'));
+      room.addUser(user);
+      socket.join(user.get('roomId'));
+
+      if (room.get('isGameActive') == false){
+        socket.emit('user joined', room.users.toJSON())
+      } else {
+        var gameData = {
+          users: room.users.toJSON(),
+          scene: room.get('scene')
+        };
+        socket.emit('game resumed', gameData)
+      }
+    })
+  })
 
 
   socket.on('user is ready', function(){
-    var user = allUsers.get(socket.id);
+    var user = allUsers.get(socket.sUserId);
     if(!user) return;
     var room = rooms.getOrInit(user.get('roomId'));
     user.set('userStatus', true);
@@ -63,14 +87,14 @@ io.on('connection', function(socket){
           users: room.users.toJSON(),
           scene: room.get('scene')
         };
-        io.to(user.get('roomId')).emit('game start', gameData);
+        io.to(user.get('roomId')).emit('game started', gameData);
         console.log('game start');
       }, YOUR_FAVORITE_TIME)
     }
 
   });
   socket.on('user is not ready', function(){
-    var user = allUsers.get(socket.id);
+    var user = allUsers.get(socket.sUserId);
     if(!user) return;
     var room = rooms.getOrInit(user.get('roomId'));
     user.set('userStatus', false);
@@ -80,7 +104,7 @@ io.on('connection', function(socket){
   });
 
   socket.on('new message', function(msg){
-    var user = allUsers.get(socket.id);
+    var user = allUsers.get(socket.sUserId);
     if(!user) return;
     var userId = user.id;
     var oMsg = {
@@ -94,7 +118,7 @@ io.on('connection', function(socket){
 
   socket.on('general vote', function(vote){
     var user, roomId, room, aliveUsers, chosenUserId, gameData;
-    user = allUsers.get(socket.id);
+    user = allUsers.get(socket.sUserId);
     if(!user) return;
     user.set('generalVote', vote);
     roomId = user.get('roomId');
@@ -126,7 +150,7 @@ io.on('connection', function(socket){
 
   socket.on('special vote', function(vote){
     var user, roomId, room, aliveMafias, chosenByMafiaUserId, aliveDoctors, alivePolices, suspect, gameData = {deadUserId : null};
-    user = allUsers.get(socket.id);
+    user = allUsers.get(socket.sUserId);
     if(!user) return;
     user.set('specialVote', vote);
     roomId = user.get('roomId');
@@ -173,13 +197,14 @@ io.on('connection', function(socket){
     }
   })
 
-  socket.on('user logout', function(){
-    var user = allUsers.get(socket.id);
+  socket.on('leave current room', function(){
+    var user = allUsers.get(socket.sUserId);
     if(!user) return;
     var room = rooms.get(user.get('roomId'));
-    allUsers.remove(user);
     room.users.remove(user);
-    socket.leave(roomId);
+    socket.leave(user.get('roomId'));
+    user.refreshAttributes()
+    socket.emit('restart game')
     if (room.users.length == 0){
       rooms.remove(room);
     }
@@ -305,4 +330,8 @@ var _filterOutAliveUsers = function(users){
   });
 }
 
+var _findUser = function(socket, successCallback) {
+  var user = allUsers.get(socket.sUserId);
+  user ? successCallback(user) : socket.emit('cannot find user')
+}
 
